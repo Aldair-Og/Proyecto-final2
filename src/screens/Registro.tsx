@@ -1,16 +1,84 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text, StyleSheet, ImageBackground, Image, SafeAreaView, ScrollView, Dimensions } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text, StyleSheet, ImageBackground, Image, SafeAreaView, ScrollView, Dimensions, Alert } from 'react-native';
+import { styles } from '../theme/appTheme';
+import { User } from '../navigator/StackNavigator';
+import { CommonActions, useNavigation } from '@react-navigation/native';
+import { InputComponent } from '../components/InputComponent';
+import { ButtonComponent } from '../components/ButtonComponent';
 
 
-const { width, height } = Dimensions.get('window');
+interface Props {
+    users: User[];
+    addUser: (user: User) => void;
+}
 
-export const Registro = () => {
 
-    const [nombre, setNombre] = useState('');
-    const [correo, setCorreo] = useState('');
-    const [contrasena, setContrasena] = useState('');
-    const [confirmarContrasena, setConfirmarContrasena] = useState('');
-    const [telefono, setTelefono] = useState('');  
+interface RegisterForm{
+    name: string;
+    email: string;
+    phone: string;
+    password: string;
+    confiPassw: string;
+}
+
+export const Registro = ({users, addUser}:Props) => {
+
+    const [registerForm, setRegisterForm] = useState<RegisterForm>({
+        name: '',
+        email: '',
+        phone: '',
+        password: '',
+        confiPassw: '',
+    });
+
+    const navigation = useNavigation();
+
+    const handleChange = (name: string, value: string): void => {
+        setRegisterForm({...registerForm, [name]: value});
+    }
+
+    const verifyUser = (): User | undefined => {
+        const existUser = users.find(user => user.email === registerForm.email);
+        return existUser;
+    }
+
+    const getIdNewUser = () => {
+        const getIdUser = users.map(user => user.id);
+        return Math.max(...getIdUser) + 1;
+    }
+
+    const handleRegister = (): void => {
+        if(registerForm.name === '' || registerForm.email === '' || registerForm.phone === '' || registerForm.password === ''){
+            Alert.alert('Error', 'Todos los campos son obligatorios')
+            return;
+        }
+
+        if(verifyUser()){
+            Alert.alert('Error', 'El correo ya esta registrado')
+            return;
+        }
+
+        if(!(registerForm.password === registerForm.confiPassw)){
+            Alert.alert('Error', 'Las contraseñas no coinciden')
+            return;
+        }
+
+        console.log();
+        
+
+        const newUser: User = {
+            id: getIdNewUser(),
+            name: registerForm.name,
+            email: registerForm.email,
+            phone: registerForm.phone,
+            password: registerForm.password
+        }
+
+        addUser(newUser);
+        Alert.alert('Registro', 'Usuario registrado con exito');
+        navigation.goBack();
+        
+    } 
 
     return (
         <SafeAreaView style={styles.container}>
@@ -28,67 +96,52 @@ export const Registro = () => {
 
                         <View style={styles.inputContainer}>
                             <Image source={require('../../assets/usuario.png')} style={styles.icon} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Nombre de Usuario"
-                                value={nombre}
-                                onChangeText={setNombre}
-                                placeholderTextColor="#fff"
+                            <InputComponent text='Nombre'
+                            handleChange={handleChange}
+                            name={'name'}
                             />
                         </View>
 
                         <View style={styles.inputContainer}>
                             <Image source={require('../../assets/correo.png')} style={styles.icon} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Correo Electrónico"
-                                keyboardType="email-address"
-                                value={correo}
-                                onChangeText={setCorreo}
-                                placeholderTextColor="#fff"
+                            <InputComponent text='Correo'
+                                keyboard='email-address'
+                                handleChange={handleChange}
+                                name={'email'}
                             />
                         </View>
 
                         <View style={styles.inputContainer}>
                             <Image source={require('../../assets/telefono.png')} style={styles.icon} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Número de Teléfono"
-                                keyboardType="phone-pad"
-                                value={telefono}
-                                onChangeText={setTelefono}
-                                placeholderTextColor="#fff"
+                            <InputComponent text='Telefono'
+                                keyboard='phone-pad'
+                                handleChange={handleChange}
+                                name={'phone'}
                             />
                         </View>
 
                         <View style={styles.inputContainer}>
                             <Image source={require('../../assets/password.png')} style={styles.icon} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Contraseña"
-                                secureTextEntry
-                                value={contrasena}
-                                onChangeText={setContrasena}
-                                placeholderTextColor="#fff"
-                            />
+                                <InputComponent text='Contraseña' 
+                                    handleChange={handleChange}
+                                    name={'password'}
+                                />
                         </View>
 
                         <View style={styles.inputContainer}>
                             <Image source={require('../../assets/password.png')} style={styles.icon} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Confirmar Contraseña"
-                                secureTextEntry
-                                value={confirmarContrasena}
-                                onChangeText={setConfirmarContrasena}
-                                placeholderTextColor="#fff"
-                            />
+                            <InputComponent text='Confirmar contraseña' 
+                                    handleChange={handleChange}
+                                    name={'confiPassw'}
+                                />
                         </View>
 
-                        <TouchableOpacity style={styles.button}>
-                            <Text style={styles.buttonText}>Registrarse</Text>
-                        </TouchableOpacity>
+                        <ButtonComponent title='Registrarse' handleSendInfo={handleRegister}/>
                     </View>
+                    <TouchableOpacity 
+                        onPress={() => navigation.dispatch(CommonActions.navigate({name: 'InicioSesion'}))}>
+                        <Text style = {styles.textRedirect}>Ya tienes una cuenta? Inicia sesion ahora</Text>
+                    </TouchableOpacity>
 
                 </ScrollView>
             </ImageBackground>
@@ -96,78 +149,3 @@ export const Registro = () => {
     );
 };
 
-const styles = StyleSheet.create({
-    container: { 
-        flex: 1 
-        //width: 300,
-        //height: 500,
-    },
-    backgroundImage: {
-        flex: 1,
-        width: '100%',
-        justifyContent: 'center',
-    },
-    scrollViewContent: {
-        flexGrow: 1, 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        paddingBottom: height * 0.05, 
-    },
-    title: {
-        fontSize: width * 0.08,
-        fontWeight: 'bold', 
-        color: 'white',
-        marginTop: height * 0.05, 
-        textAlign: 'center',
-    },
-    imageContainer: {
-        justifyContent: 'center', 
-        alignItems: 'center'
-    },
-    centeredImage: {
-        width: width * 0.5, 
-        height: height * 0.2, 
-    },
-    formContainer: {
-        marginTop: height * 0.05, 
-        width: '90%', 
-        justifyContent: 'center', 
-        alignItems: 'center',
-    },
-    inputContainer: {
-        flexDirection: 'row', 
-        alignItems: 'center', 
-        marginBottom: height * 0.03, 
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        borderRadius: 50, 
-        paddingHorizontal: width * 0.05, 
-        width: '100%' 
-    },
-    icon: {
-        width: width * 0.06, 
-        height: width * 0.06, 
-        marginRight: width * 0.03,
-        tintColor: 'white'
-    },
-    input: { 
-        flex: 1,
-        height: height * 0.06, 
-        color: 'white',
-        fontSize: width * 0.045, 
-        paddingHorizontal: width * 0.04 
-    },
-    button: { 
-        backgroundColor: 'red',
-        borderRadius: 25, 
-        paddingVertical: height * 0.02, 
-        paddingHorizontal: width * 0.1,
-        marginTop: height * 0.02 
-    },
-    buttonText: { 
-        color: 'white', 
-        fontSize: width * 0.05, 
-        fontWeight: 'bold' 
-    },
-});
-
-export default Registro;

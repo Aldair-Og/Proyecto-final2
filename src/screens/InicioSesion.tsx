@@ -1,13 +1,58 @@
 import React, { useState } from 'react';
 import {
-    View, TextInput, TouchableOpacity, Text, StyleSheet, ImageBackground, Image, SafeAreaView, ScrollView, KeyboardAvoidingView, Platform,Dimensions} from 'react-native';
+    View, TextInput, TouchableOpacity, Text, StyleSheet, ImageBackground, Image, SafeAreaView, ScrollView, KeyboardAvoidingView, Platform,Dimensions,
+    Alert} from 'react-native';
+import { styles } from '../theme/appTheme';
+import { InputComponent } from '../components/InputComponent';
+import { ButtonComponent } from '../components/ButtonComponent';
+import { CommonActions, useNavigation } from '@react-navigation/native';
+import { User } from '../navigator/StackNavigator';
+import Icon from 'react-native-vector-icons/MaterialIcons'
 
-const { width, height } = Dimensions.get('window');
+interface Props {
+    users: User[];
+}
 
-export const InicioSesion = () => {
 
-    const [usuario, setUsuario] = useState('');
-    const [contrasena, setContrasena] = useState('');
+interface LoginForm{
+    email: string;
+    password: string;
+}
+
+export const InicioSesion = ({users}: Props) => {
+
+    const [loginForm, setLoginForm] = useState<LoginForm>({email: '', password: ''});
+
+    const handleChange = (name: string, value: string): void => {
+        setLoginForm({...loginForm, [name]: value});
+    }
+
+    const verifyUser = (): User | undefined => {
+        const existUser = users.find(user => user.email === loginForm.email && user.password === loginForm.password);
+        return existUser;
+    }
+
+    const handleLogin = (): void => {
+        if(loginForm.email === '' || loginForm.password === ''){
+            Alert.alert('Error', 'Todos los campos son obligatorios')
+            return;
+        }
+        
+        if(!verifyUser()){
+            Alert.alert('Error', 'Usuario y/o contraseña incorrecta')
+            return;
+        }
+
+        console.log();
+        
+        navigation.dispatch(CommonActions.navigate({name: 'Home'}));
+
+    }
+
+    const [hiddenPassword, setHiddenPassword] = useState<boolean>(true);
+
+    const navigation = useNavigation();
+
 
     return (
         <SafeAreaView style={styles.container}>
@@ -25,113 +70,41 @@ export const InicioSesion = () => {
                         <View style={styles.formContainer}>
                             <View style={styles.inputContainer}>
                                 <Image source={require('../../assets/usuario.png')} style={styles.icon} />
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Usuario"
-                                    value={usuario}
-                                    onChangeText={setUsuario}
-                                    placeholderTextColor="#fff"
-                                />
+                                <InputComponent text='Correo' 
+                                    keyboard='email-address'
+                                    handleChange={handleChange}
+                                    name={'email'}
+                                    />
                             </View>
 
                             <View style={styles.inputContainer}>
                                 <Image source={require('../../assets/password.png')} style={styles.icon} />
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Contraseña"
-                                    secureTextEntry
-                                    value={contrasena}
-                                    onChangeText={setContrasena}
-                                    placeholderTextColor="#fff"
+                                <InputComponent text='contraseña' 
+                                    handleChange={handleChange}
+                                    name={'password'}
+                                    isPassword= {hiddenPassword}
+                                />
+                                <Icon name = {hiddenPassword ? 'visibility' : 'visibility-off' }
+                                    size={20} 
+                                    color={'white'}
+                                    style= {styles.iconPassword}
+                                    onPress={() => setHiddenPassword(!hiddenPassword)}
                                 />
                             </View>
 
-                            <TouchableOpacity style={styles.button}>
-                                <Text style={styles.buttonText}>Ingresar</Text>
-                            </TouchableOpacity>
+                            <ButtonComponent title='Ingresar'
+                                handleSendInfo={handleLogin}/>
                         </View>                   
                     
+                    <TouchableOpacity 
+                        onPress={() => navigation.dispatch(CommonActions.navigate({name: 'Registro'}))}>
+                    <Text style = {styles.textRedirect}>No tienes una cuenta? Registrate ahora</Text>
+                </TouchableOpacity>
+
                     </ScrollView>
             </ImageBackground>
         </SafeAreaView>
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        //width: 300,
-        //height: 500,
-
-    },
-    backgroundImage: {
-        flex: 1,
-        width: '100%',
-        height: '100%',
-        justifyContent: 'center',
-    },
-    keyboardView: {
-        flex: 1,
-    },
-    scrollViewContent: {
-        flexGrow: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingBottom: height * 0.05,
-    },
-    title: {
-        fontSize: width * 0.11,
-        fontWeight: 'bold',
-        color: 'white',
-        marginTop: height * 0.04,
-    },
-    imageContainer: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    centeredImage: {
-        width: width * 0.6,
-        height: width * 0.6,
-        resizeMode: 'contain',
-    },
-    formContainer: {
-        width: '90%',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: height * 0.03,
-    },
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        borderRadius: 25,
-        paddingHorizontal: 15,
-        width: '100%',
-        marginBottom: height * 0.02,
-    },
-    icon: {
-        width: width * 0.08,
-        height: width * 0.08,
-        marginRight: 10,
-        tintColor: 'white',
-    },
-    input: {
-        flex: 1,
-        height: 50,
-        color: 'white',
-        fontSize: 18,
-    },
-    button: {
-        backgroundColor: 'red',
-        borderRadius: 25,
-        paddingVertical: height * 0.02,
-        paddingHorizontal: width * 0.2,
-        marginTop: height * 0.02,
-    },
-    buttonText: {
-        color: 'white',
-        fontSize: width * 0.05,
-        fontWeight: 'bold',
-    },
-});
 
