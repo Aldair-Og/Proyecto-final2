@@ -2,7 +2,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { useState } from 'react';
 import { InicioSesion } from '../screens/InicioSesion';
 import {Registro}from '../screens/Registro';
-import { HomeScreen } from '../screens/HomeScreen';
+import { HomeScreen } from '../screens/homeScreen/HomeScreen';
 
 export interface User {
     id: number,
